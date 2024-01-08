@@ -5,43 +5,84 @@ date: "2024-01-07"
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, fig.height = 5, fig.width = 5)
+knitr::opts_chunk$set(echo = FALSE, fig.height = 3, fig.width = 6)
 
 library(dplyr)
 library(ggplot2)
 library(waffle)
+library(forcats)
+library(sf)
+library(here)
 
 ```
+
+#UK map
+
+```{r}
+
+
+# Load the boundary data for local authority districts
+lad <- st_read(here("data", "maps", "lad", "LAD_DEC_2021_GB_BUC.shp"))
+
+
+boxes <- st_make_grid(lad , cellsize = 4e4,what = "polygons", square = TRUE) |> st_as_sf()
+
+
+grid_lad <- boxes[c(unlist(st_contains(lad, boxes)), 
+                        unlist(st_overlaps(lad, boxes))) ,] 
+
+
+ggplot(grid_lad) +
+  geom_sf(fill = "#f8766d", colour = "white", lwd = 1) +
+  theme_void()
+
+
+# library(geogrid)
+# 
+# # Load the boundary data for local authority districts
+# lad <- st_read(here("data", "maps", "lad", "LAD_DEC_2021_GB_BUC.shp"))
+# 
+# x <- head(lad, 100)
+# 
+# 
+# cells <- calculate_grid(shape = lad, grid_type = "regular",verbose = TRUE, seed = 3)
+# grid <- assign_polygons(shape = lad, new_polygons = cells)
+
+
+```
+
+
+
 
 # UK Production
 
 ```{r}
-prod <- tibble(type = c("domestic"), vol = c(100))
-
-prod |> 
-  ggplot() + 
-  geom_waffle(aes(fill = type, values = vol), n_rows = 10, colour = "white", size = 1) + 
-  theme_void() +
-  theme(legend.position = "none") +
-  labs(title = "UK domestic production")
+# prod <- tibble(type = c("domestic"), vol = c(22995))
+# 
+# prod |> 
+#   ggplot() + 
+#   geom_waffle(aes(fill = type, values = vol), n_rows = 10, colour = "white", size = 1, make_proportional = TRUE) + 
+#   theme_void() +
+#   theme(legend.position = "none") +
+#   labs(title = "UK domestic production")
 
 ```
 
 ## UK Availability
 
 ```{r}
-avail <- tibble(type = c("domestic", "exports"), vol = c(78, 22))
-
-avail |> 
-  ggplot() + 
-  geom_waffle(aes(fill = type, values = vol),n_rows = 10, colour = "white", size = 1) + 
-  theme_void() +
-  theme(legend.position = "none") +
-  labs(title = "UK domestic production")
+# avail <- tibble(type = c("domestic", "exports"), vol = c(19469, 3526))
+# 
+# avail |> 
+#   ggplot() + 
+#   geom_waffle(aes(fill = type, values = vol),n_rows = 10, colour = "white", size = 1, make_proportional = TRUE) + 
+#   theme_void() +
+#   theme(legend.position = "none") +
+#   labs(title = "UK domestic production")
 
 ```
 
-## UK Supply
+## UK Supply
 
 uk avail `r 312/100 *58`
 
@@ -52,19 +93,58 @@ import `r ((312/100 *58)/58 *42)`
 uk <- 312/100 *58
 imp <- ((312/100 *58)/58 *42)
 
-supply <- tibble(type = c("domestic", "imports", "exports"), vol = c(58, 42, 9))
+supply <- tibble(type = c("domestic", "exports", "imports" ), vol = c(86, 14, 62))
 
 supply |> 
   ggplot() + 
   geom_waffle(aes(fill = type, values = vol),n_rows = 10, colour = "white", size = 1) + 
   scale_fill_manual(
-    values = c("#f8766d", alpha("#00ba38", 1/5), "#619cff")
+    values = c("#f8766d", "#f8766d", "white")
   ) +
   theme_void() +
   theme(legend.position = "none") +
-  labs(title = "UK supply")
+  labs(title = "UK production") +
+  annotate("text", x = 13, y = 5.5, label = "Total UK Domestic \nproduction")
 
+supply |> 
+  ggplot() + 
+  geom_waffle(aes(fill = type, values = vol),n_rows = 10, colour = "white", size = 1) + 
+  scale_fill_manual(
+    values = c("#f8766d", alpha("#f8766d", 1/5), "white")
+  ) +
+  theme_void() +
+  theme(legend.position = "none") +
+  labs(title = "UK production available") +
+    annotate("text", x = 13, y = 5.5, label = "Some UK production \nis exported")
 
+supply <- tibble(type = c("domestic", "imports", "exports"), vol = c(86, 62, 14)) 
+
+supply |>
+  # mutate(type = fct_relevel(type, "imports", "exports", "domestic")) |> 
+  ggplot() + 
+  geom_waffle(aes(fill = type, values = vol),n_rows = 10, colour = "white", size = 1) + 
+  scale_fill_manual(
+    values = c("#f8766d", alpha("#f8766d", 1/5), "blue")
+  ) +
+  theme_void() +
+  theme(legend.position = "none") +
+  labs(title = "UK supply (= UK consumption)",
+       caption = "58% of the food we eat comes from the UK") +
+  theme(plot.caption = element_text(hjust = 0.1, vjust = 5))
+
+supply <- tibble(type = c("domestic", "exports", "imports" ), vol = c(86, 14, 62))
+
+supply |>
+  # mutate(type = fct_relevel(type, "imports", "exports", "domestic")) |> 
+  ggplot() + 
+  geom_waffle(aes(fill = type, values = vol),n_rows = 10, colour = "white", size = 1) + 
+  scale_fill_manual(
+    values = c("#f8766d", alpha("#f8766d", 1/5), alpha("blue", 1/5))
+  ) +
+  theme_void() +
+  theme(legend.position = "none") +
+  labs(title = "UK Production to Supply ratio",
+       caption = "")
 
 ```
 
