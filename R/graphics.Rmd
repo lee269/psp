@@ -25,7 +25,7 @@ library(here)
 lad <- st_read(here("data", "maps", "lad", "LAD_DEC_2021_GB_BUC.shp"))
 
 
-boxes <- st_make_grid(lad , cellsize = 4e4,what = "polygons", square = TRUE) |> st_as_sf()
+boxes <- st_make_grid(lad , cellsize = 1.5e4,what = "polygons", square = TRUE) |> st_as_sf()
 
 
 grid_lad <- boxes[c(unlist(st_contains(lad, boxes)), 
@@ -33,8 +33,10 @@ grid_lad <- boxes[c(unlist(st_contains(lad, boxes)),
 
 
 ggplot(grid_lad) +
-  geom_sf(fill = "#f8766d", colour = "white", lwd = 1) +
-  theme_void()
+  geom_sf(fill = "#f8766d", colour = "white", lwd = 0.5) +
+  annotation_custom(grob = grid::circleGrob(r = 0.5, gp = grid::gpar(fill = NA))) +
+  theme_void() 
+  
 
 
 # library(geogrid)
@@ -48,6 +50,9 @@ ggplot(grid_lad) +
 # cells <- calculate_grid(shape = lad, grid_type = "regular",verbose = TRUE, seed = 3)
 # grid <- assign_polygons(shape = lad, new_polygons = cells)
 
+
+# world map?
+# https://r-spatial.org/r/2018/10/25/ggplot2-sf.html
 
 ```
 
