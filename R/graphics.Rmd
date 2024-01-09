@@ -1,7 +1,5 @@
 ---
-title: "Untitled"
 output: html_document
-date: "2024-01-07"
 ---
 
 ```{r setup, include=FALSE}
@@ -13,143 +11,147 @@ library(waffle)
 library(forcats)
 library(sf)
 library(here)
+library(patchwork)
+
+# darkgoldenrod
+# "#B8860B" "#EEAD0E"
+
+uk_prod <- "#8B6508"
+uk_exp <- "#8B7E66"
+uk_imp <- "#CDC8B1"
+  # "#EEE8CD" "#CD950C"
 
 ```
 
-#UK map
 
-```{r}
-
-
-# Load the boundary data for local authority districts
-lad <- st_read(here("data", "maps", "lad", "LAD_DEC_2021_GB_BUC.shp"))
+```{r uk-map}
 
 
-boxes <- st_make_grid(lad , cellsize = 1.5e4,what = "polygons", square = TRUE) |> st_as_sf()
+uk_tiles <- st_read(here("data", "maps", "tilegrams", "uk_tilegram.shp"), quiet = TRUE)
+world_tiles <- st_read(here("data", "maps", "tilegrams", "world_tilegram.shp"), quiet = TRUE)
 
 
-grid_lad <- boxes[c(unlist(st_contains(lad, boxes)), 
-                        unlist(st_overlaps(lad, boxes))) ,] 
-
-
-ggplot(grid_lad) +
-  geom_sf(fill = "#f8766d", colour = "white", lwd = 0.5) +
-  annotation_custom(grob = grid::circleGrob(r = 0.5, gp = grid::gpar(fill = NA))) +
+uk_map <- ggplot(uk_tiles) +
+  geom_sf(fill = uk_prod, colour = "white", lwd = 0.5) +
+  # annotation_custom(grob = grid::circleGrob(r = 0.5, gp = grid::gpar(fill = NA))) +
   theme_void() 
-  
+```
 
 
-# library(geogrid)
-# 
-# # Load the boundary data for local authority districts
-# lad <- st_read(here("data", "maps", "lad", "LAD_DEC_2021_GB_BUC.shp"))
-# 
-# x <- head(lad, 100)
-# 
-# 
-# cells <- calculate_grid(shape = lad, grid_type = "regular",verbose = TRUE, seed = 3)
-# grid <- assign_polygons(shape = lad, new_polygons = cells)
+```{r world-map, fig.height=1.5, fig.width=3}
+world_map <- ggplot(world_tiles) +
+  geom_sf(fill = uk_imp, colour = "white", lwd = 0.5) +
+  theme_void() 
 
+export_map <- ggplot(world_tiles) +
+  geom_sf(fill = alpha(uk_exp, 0.2), colour = alpha(uk_exp,0.2), lwd = 0.5) +
+  theme_void() 
 
-# world map?
-# https://r-spatial.org/r/2018/10/25/ggplot2-sf.html
+import_map <- ggplot(world_tiles) +
+  geom_sf(fill = alpha(uk_imp,0.2), colour = alpha(uk_imp,0.2), lwd = 0.5) +
+  theme_void()
 
 ```
 
 
 
 
-# UK Production
 
-```{r}
-# prod <- tibble(type = c("domestic"), vol = c(22995))
-# 
-# prod |> 
-#   ggplot() + 
-#   geom_waffle(aes(fill = type, values = vol), n_rows = 10, colour = "white", size = 1, make_proportional = TRUE) + 
-#   theme_void() +
-#   theme(legend.position = "none") +
-#   labs(title = "UK domestic production")
 
-```
 
-## UK Availability
+```{r uk-production, fig.height=3, fig.width=9}
 
-```{r}
-# avail <- tibble(type = c("domestic", "exports"), vol = c(19469, 3526))
-# 
-# avail |> 
-#   ggplot() + 
-#   geom_waffle(aes(fill = type, values = vol),n_rows = 10, colour = "white", size = 1, make_proportional = TRUE) + 
-#   theme_void() +
-#   theme(legend.position = "none") +
-#   labs(title = "UK domestic production")
 
-```
+prod <- tibble(type = c("domestic", "exports", "imports" ), vol = c(86, 14, 62))
 
-## UK Supply
-
-uk avail `r 312/100 *58`
-
-import `r ((312/100 *58)/58 *42)`
-
-```{r}
-
-uk <- 312/100 *58
-imp <- ((312/100 *58)/58 *42)
-
-supply <- tibble(type = c("domestic", "exports", "imports" ), vol = c(86, 14, 62))
-
-supply |> 
+uk_production <- prod |> 
   ggplot() + 
   geom_waffle(aes(fill = type, values = vol),n_rows = 10, colour = "white", size = 1) + 
   scale_fill_manual(
-    values = c("#f8766d", "#f8766d", "white")
+    values = c(uk_prod, uk_prod, "white")
   ) +
   theme_void() +
   theme(legend.position = "none") +
-  labs(title = "UK production") +
-  annotate("text", x = 13, y = 5.5, label = "Total UK Domestic \nproduction")
+  # labs(title = "UK production") +
+  annotate("text", x = 14, y = 5.5, label = "Total UK Domestic \nproduction")
 
-supply |> 
+title <- "UK \nProduction"
+
+wrap_elements(grid::textGrob(title, vjust = -1, gp = grid::gpar(fontface = "bold", fontsize = 16))) + uk_map + uk_production + plot_layout(widths = c(1,1,4))
+
+```
+
+
+
+
+```{r uk-exports, fig.height=3, fig.width=9}
+uk_exports <- prod |> 
   ggplot() + 
   geom_waffle(aes(fill = type, values = vol),n_rows = 10, colour = "white", size = 1) + 
-  scale_fill_manual(
-    values = c("#f8766d", alpha("#f8766d", 1/5), "white")
-  ) +
+  scale_fill_manual(values = c(uk_prod, uk_exp, "white")) +
+
   theme_void() +
   theme(legend.position = "none") +
-  labs(title = "UK production available") +
-    annotate("text", x = 13, y = 5.5, label = "Some UK production \nis exported")
+  annotate("text", x = 14, y = 5.5, label = "Some UK production \nis exported")
 
+title <- "UK \nProduction \navailable for \nconsumption"
+
+wrap_elements(grid::textGrob(title, vjust = 0, gp = grid::gpar(fontface = "bold", fontsize = 16))) + 
+  uk_map + 
+  uk_exports + 
+  inset_element(export_map, left = 0.6, bottom = 0.5, right =1, top = 1, on_top = TRUE, align_to = "full") +
+  plot_layout(widths = c(1,1,4))
+```
+
+
+
+
+```{r supply, fig.height=3, fig.width=10}
 supply <- tibble(type = c("domestic", "imports", "exports"), vol = c(86, 62, 14)) 
 
-supply |>
-  # mutate(type = fct_relevel(type, "imports", "exports", "domestic")) |> 
+uk_supply <- supply |>
+  ggplot() + 
+  geom_waffle(aes(fill = type, values = vol),n_rows = 10, colour = "white",size = 1) + 
+  scale_fill_manual(values = c(uk_prod, alpha(uk_exp,0.1),uk_imp)) +
+  theme_void() +
+  theme(legend.position = "none") +
+  labs(title = "58% of the food we eat comes from the UK") +
+  theme(plot.title = element_text(hjust = 0.15), plot.title.position = "panel")
+
+title <- "UK \nSupply \n= \nUK \nConsumption"
+
+ wrap_elements(grid::textGrob(title, vjust = 0.2, gp = grid::gpar(fontface = "bold", fontsize = 16))) + 
+  uk_map + 
+  uk_supply + 
+  grid::textGrob("42% of \nconsumption \nis imported\n(exports are \nnot included)", vjust = 0.2) + plot_layout(widths = c(1,1,3,1)) +
+  # inset_element(export_map, left = 0, bottom = 0.5, right =1, top = 1, on_top = TRUE, align_to = "full") +
+  inset_element(import_map, left = 0, bottom = 0, right =1, top = 0.5, on_top = TRUE, align_to = "full")
+```
+
+
+
+
+```{r psp, fig.height=3, fig.width=10}
+psp <- tibble(type = c("domestic", "exports", "imports" ), vol = c(86, 14, 62))
+
+uk_psp <- psp |>
   ggplot() + 
   geom_waffle(aes(fill = type, values = vol),n_rows = 10, colour = "white", size = 1) + 
   scale_fill_manual(
-    values = c("#f8766d", alpha("#f8766d", 1/5), "blue")
+    values = c(uk_prod, uk_exp, uk_imp)
   ) +
   theme_void() +
   theme(legend.position = "none") +
-  labs(title = "UK supply (= UK consumption)",
-       caption = "58% of the food we eat comes from the UK") +
-  theme(plot.caption = element_text(hjust = 0.1, vjust = 5))
+  labs(title = "UK production is 61% of total supply") +
+  theme(plot.title = element_text(hjust = 0.15), plot.title.position = "panel")
 
-supply <- tibble(type = c("domestic", "exports", "imports" ), vol = c(86, 14, 62))
-
-supply |>
-  # mutate(type = fct_relevel(type, "imports", "exports", "domestic")) |> 
-  ggplot() + 
-  geom_waffle(aes(fill = type, values = vol),n_rows = 10, colour = "white", size = 1) + 
-  scale_fill_manual(
-    values = c("#f8766d", alpha("#f8766d", 1/5), alpha("blue", 1/5))
-  ) +
-  theme_void() +
-  theme(legend.position = "none") +
-  labs(title = "UK Production to Supply ratio",
-       caption = "")
+title <- "Production \nto Supply \nratio"
+  wrap_elements(grid::textGrob(title, vjust = -0.4, gp = grid::gpar(fontface = "bold", fontsize = 16))) + 
+  uk_map + 
+  uk_psp + 
+  grid::textGrob("UK production\n(including exports) \ncompared to \noverall supply",vjust = -0.1) + 
+  plot_layout(widths = c(1,1,3,1)) +
+  inset_element(export_map, left = 0, bottom = 0, right =1, top = 0.5, on_top = TRUE, align_to = "full")
 
 ```
 
