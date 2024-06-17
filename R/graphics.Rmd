@@ -1,7 +1,7 @@
 ---
 output:
-  html_document: default
   word_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -185,7 +185,7 @@ uk_psp <- psp |>
   ) +
   theme_void() +
   theme(legend.position = "none") +
-  labs(title = "UK production is 61% of total supply") +
+  labs(title = "UK production is 62% of total supply") +
   theme(plot.title = element_text(hjust = 0.1), plot.title.position = "panel")
 
 title <- "Production\nto Supply\nratio"
