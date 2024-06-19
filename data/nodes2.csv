@@ -1,0 +1,7 @@
+id, name, node_group
+0, UK production, UK
+1, Exports, Trade
+2, Imports, Trade
+3, Supply, Total
+4, Production consumed, UK
+5, Feed and seeds, Trade

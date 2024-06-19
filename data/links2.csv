@@ -1,0 +1,6 @@
+source, target, value, link_type
+0,4,58, UK
+0,5,2,Trade
+0,1,2, Trade
+4,3,58, UK
+2,3,42, Trade
