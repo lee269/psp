@@ -3,5 +3,5 @@ id, name, node_group
 1, Exports, Trade
 2, Imports, Trade
 3, Supply, Total
-4, Production consumed, UK
+4, Domestic supply, UK
 5, Feed and seeds, Trade
